@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Todos</title>
+
+	<style type="text/css">
+		body {
+			margin: 1em auto;
+			max-width: 40em;
+			width: 88%;
+		}
+		form {
+			margin-bottom: 2em;
+		}
+		label {
+			display: block;
+			width: 100%;
+		}
+		[type="checkbox"] {
+			margin-right: 0.5em;
+		}
+
+		.todo-completed{
+			text-decoration: line-through;
+		}
+
+	</style>
+</head>
+<body>
+
+	<h1>Todos</h1>
+
+	<form id="add-todos">
+		<label for="new-todo">What do you want to do?</label>
+		<input type="text" id="new-todo" autofocus>
+		<button>Add Todo</button>
+	</form>
+
+	<div id="app"></div>
+
+	<script src="https://cdn.jsdelivr.net/gh/cferdinandi/reef@4/dist/reef.min.js"></script>
+	<script>
+		//
+		// Variables
+		//
+
+		var formButton = document.querySelector('button');
+
+		var newTodo = document.querySelector('#new-todo');
+
+		var storageID = 'todoList';
+
+		 
+		// Create a todo component
+		 var app = new Reef('#app', {
+		 		data: {
+		 			todos: []
+		 		},
+
+		 		template: function(props) {
+
+		 			if(props.todos.length < 1){
+
+		 				return '<p>You do not have any todos</p>';
+		 			}
+
+		 			var html = '<section>' + props.todos.map(function(todo, index){
+
+		 				return '<p ' + (todo.completed ? 'class="todo-completed"' : '') + '>'
+
+		 						+ '<label for="todo-' + index + '">'
+
+		 						+ '<input type="checkbox" id="todo-' + index + '" data-todo="' + index + '" ' + (todo.completed ? 'checked' : '') + '>' 
+
+		 						+ todo.item
+
+		 						+ ' <button data-delete-todo="' + index + '">Delete</button>'
+
+		 						+ '</label>'
+		 						
+		 						+ '</p>'; 
+		 			 
+		 			}).join('') + '</section>';
+		 				
+		 			return html;
+		 		}
+		 });
+
+		//
+		// Methods
+		//
+
+		var submitHandler = function(event){
+
+			if(!event.target.matches('#add-todos')) return;
+
+			event.preventDefault();
+
+			if(newTodo.value.length < 1) return;
+
+			var todos = app.getData().todos;
+
+			todos.push({item: newTodo.value, completed: false});
+
+			localStorage.setItem(storageID, JSON.stringify(todos));
+
+			// Pass in the immutable copy of todo created above as the value of the data's todos property
+			app.setData({todos: todos});
+
+			newTodo.value = '';
+
+			newTodo.focus();
+		};
+
+		var clickHandler = function(event){
+
+			// Make sure the think that was clicked has a 'data-todo' attribute (i.e. it's a todo item)
+			var todo = event.target.getAttribute('data-todo');
+
+			// If not, shut it down
+			if(!todo) return;
+
+			// Create am immutable copy of the todos data
+			var todos = app.getData().todos;
+
+			// Is there an item in the todos array with the index of whatever was on associated with the clicked input? If not, shut it down
+			if(!todos[todo]) return;
+
+			// Set the boolean value (true/false) of the todo's completed property based on whether the todo's checkbox is checked
+			todos[todo].completed = event.target.checked;
+
+			// Need so that when a todo is checked local storage is updated to reflect that
+			localStorage.setItem(storageID, JSON.stringify(todos));
+
+			app.setData({todos: todos});
+
+		};
+
+
+		// Handle deleting todo items
+		var deleteHandler = function(event){
+
+			var todo = event.target.getAttribute('data-delete-todo');
+
+			console.log(todo);
+
+			if(!todo) return;
+
+			var todos = app.getData().todos;
+
+			todos.splice(todo, 1);
+
+			localStorage.setItem(storageID, JSON.stringify(todos));
+
+			app.setData({todos: todos});
+
+		};
+
+		// Check if there is data in local storage. If there is, load that data, otherwise render a new UI
+		var loadData = function(){
+
+			var todos = app.getData().todos;
+
+			var savedData = JSON.parse(localStorage.getItem(storageID));
+
+			if(!savedData){
+
+				app.render();
+
+			}else{
+
+				app.setData({todos: savedData})
+
+				console.log('loaded from saved data');
+			}
+			
+		}
+
+
+		//
+		// Inits and Event Listeners
+		//
+
+		loadData();
+
+		window.addEventListener('submit', submitHandler, false);
+
+		window.addEventListener('click', clickHandler, false);
+
+		window.addEventListener('click', deleteHandler, false);
+		
+
+	</script>
+</body>
+</html>

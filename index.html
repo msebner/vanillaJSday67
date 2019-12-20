@@ -150,7 +150,16 @@
 
 			todos.splice(todo, 1);
 
-			localStorage.setItem(storageID, JSON.stringify(todos));
+			// If all of the todo items were deleted, remove the local storage item
+			if(todos.length < 1){
+
+				localStorage.removeItem(storageID);
+
+			}else{
+				
+				// Otherwise update local storage with the current list of todos
+				localStorage.setItem(storageID, JSON.stringify(todos));
+		}
 
 			app.setData({todos: todos});
 
@@ -163,9 +172,11 @@
 
 			var savedData = JSON.parse(localStorage.getItem(storageID));
 
-			if(!savedData){
+			if(!savedData || savedData.length < 1){
 
 				app.render();
+
+				console.log('new UI');
 
 			}else{
 

@@ -44,8 +44,6 @@
 		// Variables
 		//
 
-		var formButton = document.querySelector('button');
-
 		var newTodo = document.querySelector('#new-todo');
 
 		var storageID = 'todoList';
@@ -172,7 +170,7 @@
 
 			var savedData = JSON.parse(localStorage.getItem(storageID));
 
-			if(!savedData || savedData.length < 1){
+			if(!savedData){
 
 				app.render();
 
